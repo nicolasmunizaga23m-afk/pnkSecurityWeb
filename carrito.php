@@ -1,10 +1,9 @@
 <?php
+
 include("setup/setup.php");
 session_start();
 
-$op = isset($_POST['op']) ? $_POST['op'] : '';
-
-switch($op)
+switch($_POST['op'])
 {
     case "1": insertar();
         break;
@@ -16,25 +15,38 @@ switch($op)
 
 function insertar()
 {
-    $id = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
-    $cantidad = filter_input(INPUT_POST, 'cantidad', FILTER_VALIDATE_INT);
-
-    if ($id === false || $id === null || $id < 1 || $id > 9999) {
+    $id = filter_input(INPUT_POST, 'iditems', FILTER_VALIDATE_INT,
+        ['options' => ['min_range' => 1, 'max_range' => 9999]]);
+    if ($id === false || $id === null) {
         http_response_code(400);
         exit('Solicitud inválida: identificador de producto no válido.');
     }
-
-    if ($cantidad !== null && ($cantidad === false || $cantidad < 1 || $cantidad > 50)) {
-        http_response_code(400);
-        exit('Solicitud inválida: la cantidad debe ser un número entero entre 1 y 50.');
-    }
-
-    $conexion = conectar();
-    $stmt = $conexion->prepare("SELECT id, nombre, precio FROM items WHERE id = ?");
+ 
+    $stmt = conectar()->prepare("SELECT id, nombre, precio FROM items WHERE id = ?");
     $stmt->bind_param("i", $id);
     $stmt->execute();
-    $result = $stmt->get_result();
-    $datos = $result->fetch_array();
-    
-    // Lógica del carrito posterior...
+    $datos = $stmt->get_result()->fetch_assoc();
+    if (!$datos) {
+        http_response_code(404);
+        exit('Producto no encontrado.');
+    }
+ 
+    if (!isset($_SESSION["carrito"])) {
+        $_SESSION["carrito"] = array();
+    }
+    $pos = count($_SESSION["carrito"]) + 1;
+    $productos = array("posicion" => $pos, "id" => $datos['id'],
+                       "nombre" => $datos['nombre'], "precio" => $datos['precio']);
+    $_SESSION["carrito"][$pos] = $productos;
 }
+
+function eliminaritems()
+{
+    unset($_SESSION["carrito"][$_POST['pos']]);
+}
+
+function eliminartodo()
+{
+    session_destroy();
+}
+?>

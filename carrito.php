@@ -1,9 +1,10 @@
 <?php
-
 include("setup/setup.php");
 session_start();
 
-switch($_POST['op'])
+$op = isset($_POST['op']) ? $_POST['op'] : '';
+
+switch($op)
 {
     case "1": insertar();
         break;
@@ -15,23 +16,25 @@ switch($_POST['op'])
 
 function insertar()
 {
-    $_SESSION["carrito"];
-    $sql="select id, nombre, precio from items where id=".$_POST['iditems'];
-    $result=mysqli_query(conectar(),$sql);
-    $datos=mysqli_fetch_array($result);
+    $id = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
+    $cantidad = filter_input(INPUT_POST, 'cantidad', FILTER_VALIDATE_INT);
 
-    $pos=count($_SESSION["carrito"])+1;
-    $productos = array("posicion"=>$pos,"id" => $datos['id'], "nombre" =>$datos['nombre'],"precio"=>$datos['precio']);
-    $_SESSION["carrito"][$pos] = $productos;
-}
+    if ($id === false || $id === null || $id < 1 || $id > 9999) {
+        http_response_code(400);
+        exit('Solicitud inválida: identificador de producto no válido.');
+    }
 
-function eliminaritems()
-{
-    unset($_SESSION["carrito"][$_POST['pos']]);
-}
+    if ($cantidad !== null && ($cantidad === false || $cantidad < 1 || $cantidad > 50)) {
+        http_response_code(400);
+        exit('Solicitud inválida: la cantidad debe ser un número entero entre 1 y 50.');
+    }
 
-function eliminartodo()
-{
-    session_destroy();
+    $conexion = conectar();
+    $stmt = $conexion->prepare("SELECT id, nombre, precio FROM items WHERE id = ?");
+    $stmt->bind_param("i", $id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $datos = $result->fetch_array();
+    
+    // Lógica del carrito posterior...
 }
-?>

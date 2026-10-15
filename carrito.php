@@ -15,13 +15,28 @@ switch($_POST['op'])
 
 function insertar()
 {
-    $_SESSION["carrito"];
-    $sql="select id, nombre, precio from items where id=".$_POST['iditems'];
-    $result=mysqli_query(conectar(),$sql);
-    $datos=mysqli_fetch_array($result);
-
-    $pos=count($_SESSION["carrito"])+1;
-    $productos = array("posicion"=>$pos,"id" => $datos['id'], "nombre" =>$datos['nombre'],"precio"=>$datos['precio']);
+    $id = filter_input(INPUT_POST, 'iditems', FILTER_VALIDATE_INT,
+        ['options' => ['min_range' => 1, 'max_range' => 9999]]);
+    if ($id === false || $id === null) {
+        http_response_code(400);
+        exit('Solicitud inválida: identificador de producto no válido.');
+    }
+ 
+    $stmt = conectar()->prepare("SELECT id, nombre, precio FROM items WHERE id = ?");
+    $stmt->bind_param("i", $id);
+    $stmt->execute();
+    $datos = $stmt->get_result()->fetch_assoc();
+    if (!$datos) {
+        http_response_code(404);
+        exit('Producto no encontrado.');
+    }
+ 
+    if (!isset($_SESSION["carrito"])) {
+        $_SESSION["carrito"] = array();
+    }
+    $pos = count($_SESSION["carrito"]) + 1;
+    $productos = array("posicion" => $pos, "id" => $datos['id'],
+                       "nombre" => $datos['nombre'], "precio" => $datos['precio']);
     $_SESSION["carrito"][$pos] = $productos;
 }
 

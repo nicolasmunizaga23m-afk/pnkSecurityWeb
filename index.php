@@ -4,8 +4,23 @@ include("setup/setup.php");
 session_start();
 
 mysqli_set_charset(conectar(), 'utf8');
-$key=$_GET['id'];
-$_SESSION['id']=$_GET['id'];
+if (!array_key_exists('id', $_GET)) {
+    $key = 1;
+} else {
+    $key = filter_input(
+        INPUT_GET,
+        'id',
+        FILTER_VALIDATE_INT,
+        ['options' => ['min_range' => 1]]
+    );
+
+    if ($key === false || $key === null) {
+        http_response_code(400);
+        exit('Identificador no valido.');
+    }
+}
+
+$_SESSION['id'] = $key;
 
 $sql_restorant="SELECT direcciones.calle, direcciones.numero, direcciones.comuna, direcciones.region, restautantes.nombre, restautantes.id, restautantes.fono, restautantes.email, restautantes.foto FROM restautantes INNER JOIN direcciones ON restautantes.direcciones_id =
 direcciones.id WHERE restautantes.id = ".$key." AND restautantes.eliminado IS NULL";
@@ -442,11 +457,22 @@ if(isset($key))
 	</footer>
 
 
-  <script src="vendors/jquery/jquery-3.2.1.min.js"></script>
+  <!-- jQuery 3.7.1 -->
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+
+  <!-- jQuery Validate 1.22.1 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.22.1/jquery.validate.min.js" integrity="sha512-qu7dMuIm2f0KcKZ3BOoP4c+Hn+r4E8PbD2Ro4rmKsOyheCxcwhzQpf6SojA76dn+owqfANzfTFUTkGA+HpHjOA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+  <!-- jQuery Form 4.3.0 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.form/4.3.0/jquery.form.min.js" integrity="sha384-qlmct0AOBiA2VPZkMY3+2WqkHtIQ9lSdAsAn5RUJD/3vA5MKDgSGcdmIv4sCGmO2" crossorigin="anonymous"></script>
   <script src="vendors/bootstrap/bootstrap.bundle.min.js"></script>
   <script src="vendors/owl-carousel/owl.carousel.min.js"></script>
   <script src="vendors/nice-select/jquery.nice-select.min.js"></script>
-  <script src="vendors/Magnific-Popup/jquery.magnific-popup.min.js"></script>
+  <!-- Magnific Popup 1.2.0 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/magnific-popup.js/1.2.0/jquery.magnific-popup.min.js" integrity="sha512-fCRpXk4VumjVNtE0j+OyOqzPxF1eZwacU3kN3SsznRPWHgMTSSo7INc8aY03KQDBWztuMo5KjKzCFXI/a5rVYQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+  <!-- Skrollr 0.6.30 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/skrollr/0.6.30/skrollr.min.js" integrity="sha512-A2+kuaO4O13hqxQ37G8/saUDK+Vq1TAmWqfvqZj8DGYLuKmhDKdF38014+QGqH8UCoEyzN/O4/BhNq/Dq4wOig==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <script src="js/jquery.ajaxchimp.min.js"></script>
   <script src="js/main.js"></script>
   <script src="js/controladorajax.js"></script>

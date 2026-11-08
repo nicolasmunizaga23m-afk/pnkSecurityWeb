@@ -42,7 +42,25 @@ function insertar()
 
 function eliminaritems()
 {
-    unset($_SESSION["carrito"][$_POST['pos']]);
+    $pos = filter_input(
+        INPUT_POST,
+        'pos',
+        FILTER_VALIDATE_INT,
+        ['options' => ['min_range' => 1]]
+    );
+
+    if (
+        $pos === false ||
+        $pos === null ||
+        !isset($_SESSION['carrito']) ||
+        !is_array($_SESSION['carrito']) ||
+        !array_key_exists($pos, $_SESSION['carrito'])
+    ) {
+        http_response_code(400);
+        exit('Posición de carrito no válida.');
+    }
+
+    unset($_SESSION['carrito'][$pos]);
 }
 
 function eliminartodo()
